@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
-import { cashflowSeries, formatINR, spendByCategory, type FinanceData, type Transaction } from "@/lib/finance";
+import { budgetStatus, cashflowSeries, forecastMonthEnd, formatINR, getSummary, spendByCategory, type FinanceData, type Transaction } from "@/lib/finance";
 import { PanelHead, TransactionRow } from "@/components/finance-primitives";
 
 function Sparkline({ values }: { values: number[] }) {
@@ -56,7 +56,20 @@ function Donut({ data }: { data: FinanceData }) {
     </div>
   );
 }
-export function Overview({ data, summary, budgets, forecast, topCategory, monthlyBudget, monthlyBudgetUsed, setView, onEdit }: any) {
+
+type OverviewProps = {
+  data: FinanceData;
+  summary: ReturnType<typeof getSummary>;
+  budgets: ReturnType<typeof budgetStatus>;
+  forecast: ReturnType<typeof forecastMonthEnd>;
+  topCategory: ReturnType<typeof spendByCategory>[number] | undefined;
+  monthlyBudget: number;
+  monthlyBudgetUsed: number;
+  setView: (view: "budgets" | "transactions") => void;
+  onEdit: (tx: Transaction) => void;
+};
+
+export function Overview({ data, summary, budgets, forecast, topCategory, monthlyBudget, monthlyBudgetUsed, setView, onEdit }: OverviewProps) {
   const recent = [...data.transactions].sort((a: Transaction, b: Transaction) => b.date.localeCompare(a.date)).slice(0, 6);
   const budgetRemaining = monthlyBudget - monthlyBudgetUsed;
   const score = Math.max(0, Math.min(100, Math.round(58 + Math.min(summary.savingsRate, 30) - Math.max(0, budgetRemaining < 0 ? 18 : 0))));
@@ -80,7 +93,7 @@ export function Overview({ data, summary, budgets, forecast, topCategory, monthl
     </section>
     <section className="two-col lower">
       <article className="panel"><PanelHead title="Budget pulse" detail="Category limits" action={<button className="text-link" onClick={() => setView("budgets")}>Manage</button>} />
-        <div className="budget-list">{budgets.slice(0,4).map((b: any) => <div className="budget-row" key={b.id}><div><span>{b.category?.name}</span><strong>{formatINR(b.used)} / {formatINR(b.limit)}</strong></div><div className="progress"><i className={b.percent > 100 ? "over" : b.percent > 80 ? "risk" : ""} style={{ width: `${Math.min(b.percent,100)}%` }}/></div><small>{b.remaining >= 0 ? `${formatINR(b.remaining)} left` : `${formatINR(Math.abs(b.remaining))} over`}</small></div>)}</div>
+        <div className="budget-list">{budgets.slice(0,4).map((b) => <div className="budget-row" key={b.id}><div><span>{b.category?.name}</span><strong>{formatINR(b.used)} / {formatINR(b.limit)}</strong></div><div className="progress"><i className={b.percent > 100 ? "over" : b.percent > 80 ? "risk" : ""} style={{ width: `${Math.min(b.percent,100)}%` }}/></div><small>{b.remaining >= 0 ? `${formatINR(b.remaining)} left` : `${formatINR(Math.abs(b.remaining))} over`}</small></div>)}</div>
       </article>
       <article className="panel"><PanelHead title="Recent activity" detail="Latest transactions" action={<button className="text-link" onClick={() => setView("transactions")}>View all</button>} />
         <div className="recent-list">{recent.map((tx: Transaction) => <TransactionRow key={tx.id} tx={tx} data={data} onClick={() => onEdit(tx)} compact />)}</div>
