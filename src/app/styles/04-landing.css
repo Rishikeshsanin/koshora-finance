@@ -1,0 +1,44 @@
+/* Landing */
+.landing { min-height: 100vh; background: var(--bg); }
+.landing-nav { height: 74px; max-width: 1180px; margin: auto; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; }
+.landing-nav .brand { padding: 0; }
+.landing-nav .nav-actions { display: flex; gap: 8px; }
+.landing-hero { max-width: 1180px; margin: 42px auto 0; padding: 0 22px 64px; display: grid; grid-template-columns: 1.05fr .95fr; gap: 50px; align-items: center; }
+.hero-copy h1 { margin: 12px 0 18px; font-size: clamp(50px, 7.3vw, 88px); line-height: .91; letter-spacing: -.072em; max-width: 760px; }
+.hero-copy h1 em { font-style: normal; color: var(--muted); }
+.hero-copy > p { color: var(--muted); font-size: 15px; line-height: 1.65; max-width: 610px; }
+.hero-cta { display: flex; gap: 9px; margin: 26px 0 16px; }
+.hero-note { color: var(--muted); font-size: 10px; }
+.hero-visual { background: var(--text); color: #eff5f0; border-radius: 28px; padding: 18px; min-height: 550px; box-shadow: 0 28px 80px rgba(18,23,21,.16); transform: rotate(1.2deg); }
+.visual-top { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 20px; }
+.visual-dots { display: flex; gap: 5px; }
+.visual-dots i { width: 7px; height: 7px; background: rgba(255,255,255,.28); border-radius: 50%; }
+.visual-chip { font-size: 8px; text-transform: uppercase; letter-spacing: .1em; opacity: .6; }
+.visual-balance { padding: 24px; background: #d9f8b8; color: #172019; border-radius: 20px; }
+.visual-balance span { font-size: 9px; opacity: .6; text-transform: uppercase; letter-spacing: .1em; }
+.visual-balance strong { display: block; font-size: 42px; letter-spacing: -.055em; margin: 9px 0; }
+.visual-balance small { opacity: .65; }
+.visual-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 12px; margin-top: 12px; }
+.visual-card { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.09); border-radius: 18px; padding: 17px; min-height: 220px; }
+.visual-card h3 { margin: 0 0 18px; font-size: 12px; }
+.mini-bars { height: 150px; display: flex; align-items: end; gap: 7px; }
+.mini-bars i { flex: 1; background: rgba(217,248,184,.8); border-radius: 5px 5px 2px 2px; }
+.mini-budget { display: grid; gap: 13px; }
+.mini-budget div span { display: flex; justify-content: space-between; font-size: 9px; opacity: .72; margin-bottom: 5px; }
+.mini-budget div i { display: block; height: 5px; background: rgba(255,255,255,.12); border-radius: 99px; overflow: hidden; }
+.mini-budget div i:after { content: ""; display: block; width: var(--w); height: 100%; background: #d9f8b8; border-radius: inherit; }
+.logo-row { max-width: 1180px; margin: 0 auto 80px; padding: 0 22px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.logo-row div { padding: 18px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.logo-row strong { display: block; color: var(--text); font-size: 22px; margin-bottom: 4px; letter-spacing: -.03em; }
+.feature-section { max-width: 1180px; margin: auto; padding: 80px 22px; border-top: 1px solid var(--line); }
+.section-heading { display: grid; grid-template-columns: .6fr 1.4fr; gap: 30px; align-items: start; margin-bottom: 42px; }
+.section-heading h2 { margin: 0; font-size: clamp(36px, 5vw, 62px); letter-spacing: -.055em; line-height: 1; }
+.feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.feature { min-height: 260px; padding: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; }
+.feature-num { color: var(--muted); font-size: 10px; }
+.feature h3 { margin: 80px 0 9px; font-size: 22px; letter-spacing: -.035em; }
+.feature p { color: var(--muted); font-size: 12px; line-height: 1.6; }
+.demo-banner { max-width: 1180px; margin: 30px auto 70px; padding: 50px; border-radius: 26px; background: var(--text); color: var(--brand-contrast); display: flex; align-items: center; justify-content: space-between; gap: 30px; }
+.demo-banner h2 { font-size: clamp(30px, 4vw, 54px); letter-spacing: -.055em; margin: 0 0 8px; }
+.demo-banner p { margin: 0; opacity: .65; }
+.demo-banner .primary { background: var(--brand-contrast); color: #121715; }
