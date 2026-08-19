@@ -1,0 +1,18 @@
+"use client";
+
+import { useEffect, useState, type FormEvent } from "react";
+import { uid, type FinanceData, type Transaction } from "@/lib/finance";
+
+export function TransactionModal({ data, existing, onClose, onSave }: { data: FinanceData; existing?: Transaction; onClose:()=>void; onSave:(tx:Transaction)=>void }) {
+  const [type,setType]=useState<Transaction["type"]>(existing?.type??"expense");
+  const [amount,setAmount]=useState(String(existing?.amount??""));
+  const [description,setDescription]=useState(existing?.description??"");
+  const [categoryId,setCategoryId]=useState(existing?.categoryId??data.categories.find((c)=>c.kind==="expense")?.id??"");
+  const [accountId,setAccountId]=useState(existing?.accountId??data.accounts[0]?.id??"");
+  const [toAccountId,setToAccountId]=useState(existing?.toAccountId??data.accounts[1]?.id??"");
+  const [date,setDate]=useState(existing?.date??new Date().toISOString().slice(0,10));
+  const [note,setNote]=useState(existing?.note??"");
+  useEffect(()=>{if(type!=="transfer"){const cat=data.categories.find((c)=>c.kind===type);if(cat)setCategoryId(cat.id);}},[type,data.categories]);
+  function submit(e:FormEvent){e.preventDefault();const n=Number(amount);if(!description.trim()||!n||n<=0||!accountId)return;onSave({id:existing?.id??uid("tx"),type,amount:n,description:description.trim(),note:note.trim()||undefined,categoryId:type==="transfer"?undefined:categoryId,accountId,toAccountId:type==="transfer"?toAccountId:undefined,date,recurring:existing?.recurring??false});}
+  return <div className="modal-backdrop" onMouseDown={(e)=>{if(e.target===e.currentTarget)onClose()}}><form className="modal" onSubmit={submit}><div className="modal-head"><div><span className="eyebrow">{existing?"Edit record":"New record"}</span><h2>{existing?"Update transaction":"Add transaction"}</h2></div><button type="button" className="icon-btn" onClick={onClose}>×</button></div><div className="type-tabs">{["expense","income","transfer"].map((t)=><button type="button" key={t} className={type===t?"active":""} onClick={()=>setType(t as Transaction["type"])}>{t}</button>)}</div><label>Amount <div className="money-input"><span>₹</span><input autoFocus type="number" min="1" step="1" value={amount} onChange={(e)=>setAmount(e.target.value)} placeholder="0" required/></div></label><label>Description <input value={description} onChange={(e)=>setDescription(e.target.value)} placeholder="What was this for?" required/></label>{type!=="transfer"&&<label>Category <select value={categoryId} onChange={(e)=>setCategoryId(e.target.value)}>{data.categories.filter((c)=>c.kind===type).map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}<div className="form-two"><label>From account <select value={accountId} onChange={(e)=>setAccountId(e.target.value)}>{data.accounts.map((a)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>{type==="transfer"?<label>To account <select value={toAccountId} onChange={(e)=>setToAccountId(e.target.value)}>{data.accounts.filter((a)=>a.id!==accountId).map((a)=><option key={a.id} value={a.id}>{a.name}</option>)}</select></label>:<label>Date <input type="date" value={date} onChange={(e)=>setDate(e.target.value)}/></label>}</div>{type==="transfer"&&<label>Date <input type="date" value={date} onChange={(e)=>setDate(e.target.value)}/></label>}<label>Note <textarea value={note} onChange={(e)=>setNote(e.target.value)} placeholder="Optional context" rows={3}/></label><div className="modal-actions"><button type="button" className="secondary" onClick={onClose}>Cancel</button><button className="primary" type="submit">{existing?"Save changes":"Add transaction"}</button></div></form></div>;
+}
