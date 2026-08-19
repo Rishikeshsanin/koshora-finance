@@ -1,94 +1,107 @@
 # Koshora
 
+[![Quality Gate](https://github.com/Rishikeshsanin/koshora-finance/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishikeshsanin/koshora-finance/actions/workflows/ci.yml)
+
 > **Clarity for every rupee.** A production-minded personal-finance workspace for transactions, budgets, savings goals, recurring commitments, and explainable cash-flow insights.
 
-Koshora is a final-year portfolio project designed to feel like a coherent fintech product rather than a tutorial expense tracker. It combines a fast recruiter demo with an authenticated Supabase-backed workspace, so the same interface can be explored instantly and also used with private, per-user data.
+Koshora is built to feel like a coherent fintech product rather than a tutorial expense tracker. It combines a zero-friction recruiter demo with a secure Supabase cloud architecture, so the same interface can be explored instantly and can also operate as a private per-user finance workspace when a dedicated backend is configured.
 
-## Live experience
+## Experience
 
-- **Recruiter demo:** `/demo` — interactive sample data persisted only in the browser.
-- **Private workspace:** `/login` → `/app` — email/password authentication with Supabase.
+- **Recruiter demo:** `/demo` — fully interactive sample data persisted only in the browser.
+- **Cloud workspace:** `/login` → `/app` — Supabase email/password authentication and private Postgres persistence when environment variables are configured.
+- **Landing page:** `/` — product positioning, feature story, and direct demo entry.
 - **Production URL:** added after the first Vercel production deployment.
 
-## What makes it different
+The demo does **not** require Supabase, a bank connection, or an account.
+
+## Why Koshora is different
 
 ### A dashboard that explains, not just displays
-Koshora computes current balance, monthly income and expenses, savings rate, month-over-month expense movement, category concentration, budget remaining, and a financial-health signal from the same underlying transaction model.
+Koshora computes current balance, monthly income and expenses, savings rate, month-over-month expense movement, category concentration, budget remaining, and a financial-health signal from one shared transaction model.
 
 ### Explainable forecasting
-The month-end forecast is intentionally rule/statistics based. It projects variable spending from observed daily behavior and known recurring commitments, then exposes a confidence label instead of pretending to be AI.
+The month-end forecast is intentionally deterministic. It projects variable spending from observed daily behavior plus known recurring commitments and exposes a confidence label instead of branding ordinary arithmetic as “AI.”
 
 ### Budget risk before overspend
-Category budgets calculate amount used, amount remaining, utilization percentage, and risk state. The Insights view surfaces categories approaching or exceeding their limits.
+Category budgets calculate utilization, remaining allowance, overspend, and risk state. The Insights view surfaces categories approaching or crossing their limits.
 
 ### A real recruiter demo
-The public demo supports adding/editing/deleting transactions, filters, budgets, savings goals, accounts, exports, themes, and reset-to-seed behavior. It is not a screenshot-only mockup.
+The public demo supports transaction CRUD, search/filter/sort, budgets, savings goals, accounts, exports, themes, responsive layouts, and reset-to-seed behavior. It is an interactive product surface—not a screenshot-only mockup.
 
-## Features
+## Core features
 
-- Income, expense, and transfer transactions
-- Edit/delete/search/filter/sort transaction history
+- Income, expense, and account-transfer transactions
+- Add, edit, delete, search, filter, and sort transaction history
 - Category-aware spending analysis
-- Multiple account types: bank, cash, wallet, credit, savings
-- Monthly category budgets and overspend warnings
+- Bank, cash, wallet, credit, and savings accounts
+- Monthly category budgets with overspend warnings
 - Savings goals and contributions
 - Recurring-payment visibility
 - Six-month cash-flow visualization
 - Spending-by-category visualization
-- Explainable month-end spending projection
+- Explainable month-end spending forecast
 - Rule-based spending insights and budget-risk radar
-- CSV and JSON export
-- INR-first formatting using the Indian numbering system
+- CSV transaction export and JSON backup export
+- INR-first formatting with Indian digit grouping
 - Light, dark, and system themes
-- Responsive desktop/tablet/mobile layouts
-- Browser-only seeded recruiter demo
-- Supabase authentication and private cloud workspace
-- Row Level Security plus ownership-aware foreign keys
+- Responsive desktop, tablet, and mobile layouts
+- Browser-only recruiter demo using `localStorage`
+- Supabase SSR authentication architecture
+- PostgreSQL Row Level Security and ownership-aware foreign keys
+- Server-side mutation validation and owner-scoped writes
 
 ## Architecture
 
 ```text
 Browser
-  ├─ /demo  ───────────────> FinanceApp + localStorage demo repository
-  └─ /app (authenticated) ─> Server Components
-                               │
-                               ├─ Supabase SSR session / getClaims()
-                               ├─ read model -> Postgres (RLS)
-                               └─ /api/finance mutations
-                                      │
-                                      └─ validation + owner-scoped writes
+  ├─ /demo
+  │    └─ shared FinanceApp + localStorage demo repository
+  │
+  └─ /app (authenticated)
+       ├─ Next.js Server Component
+       ├─ Supabase SSR session / getClaims()
+       ├─ cloud read model -> Postgres + RLS
+       └─ /api/finance mutations
+            └─ validation + authenticated owner-scoped writes
 
-Shared finance engine
-  ├─ summaries
+Shared finance domain engine
+  ├─ summary metrics
   ├─ category aggregation
   ├─ budget utilization
-  ├─ cash-flow series
-  ├─ insights
-  └─ month-end forecast
+  ├─ account cash flow
+  ├─ insight generation
+  ├─ month-end forecast
+  └─ CSV export
 ```
 
-The demo and cloud modes deliberately share the same UI and calculation engine. This prevents the portfolio demo from becoming a separate fake implementation and keeps product behavior consistent.
+Demo mode and cloud mode deliberately share the same product UI and finance engine. That keeps recruiter-visible behavior aligned with the real authenticated implementation instead of maintaining a separate fake demo.
 
 ## Stack
 
-- **Next.js 16 / React 19 / TypeScript** — App Router, Server Components, server actions, route handlers
-- **Supabase** — PostgreSQL, Auth, SSR session handling, Row Level Security
-- **Custom CSS design system** — no template dependency; responsive tokens, themes, motion and states are owned by the project
-- **Vercel** — intended production host
-- **Node test runner** — lightweight deterministic tests for the finance engine
+- **Next.js 16 / React 19 / TypeScript** — App Router, Server Components, Server Actions, Proxy, Route Handlers
+- **Supabase** — PostgreSQL, Auth, SSR cookie sessions, Row Level Security
+- **Custom CSS design system** — responsive tokens, light/dark themes, motion, visualizations, and states without a UI-template dependency
+- **Vercel** — production target
+- **Node test runner** — deterministic finance-domain tests
 - **ESLint + TypeScript** — static quality gates
+- **GitHub Actions** — reproducible `npm ci` release gate
 
 ## Security model
 
-Koshora never requests banking passwords or direct bank credentials.
+Koshora never requests banking passwords or direct banking credentials.
 
-The cloud workspace uses the authenticated Supabase user ID as the ownership boundary. Every exposed table has RLS enabled. SELECT/INSERT/UPDATE/DELETE policies restrict rows to `auth.uid()`, and UPDATE policies use both `USING` and `WITH CHECK`. Finance relationships use composite ownership foreign keys such as `(account_id, user_id)` so a user cannot reference another user's account/category by guessing an ID. Server mutation routes also derive the user from the session and scope writes by owner.
+The cloud workspace uses the authenticated Supabase user ID as the ownership boundary. Every exposed finance table has RLS enabled. SELECT/INSERT/UPDATE/DELETE policies restrict access to `auth.uid()`, and UPDATE policies use both `USING` and `WITH CHECK`.
 
-Only publishable Supabase credentials belong in browser-visible environment variables. Never expose a Supabase secret/service-role key to the frontend.
+Relationships are protected too: composite ownership foreign keys such as `(account_id, user_id)` prevent a user from referencing another user's account or category even if an unrelated UUID becomes known. Server mutation routes derive identity from verified Supabase claims and scope writes by both row ID and owner.
+
+The SSR proxy propagates Supabase session cookies **and cache-control headers** during token refreshes, and authenticated API routes return JSON authorization errors instead of HTML redirects. Sign-out is POST-only.
+
+Only Supabase **publishable** credentials belong in browser-visible environment variables. A secret/service-role key must never be exposed to the frontend.
 
 ## Database
 
-The schema lives in [`database/schema.sql`](database/schema.sql).
+The production schema lives in [`database/schema.sql`](database/schema.sql).
 
 Core tables:
 
@@ -100,33 +113,32 @@ Core tables:
 - `recurring_transactions`
 - `savings_goals`
 
-Indexes cover common user/date/category/account and upcoming-recurring queries. Constraints enforce positive amounts, allowed types, valid transfer shape, unique monthly category budgets, and ownership-aware references.
+The schema includes indexes, amount/type constraints, valid-transfer constraints, unique monthly category budgets, RLS policies, and ownership-aware relationships.
 
 ## Local development
 
-### 1. Install
+### 1. Install the locked dependency graph
 
 ```bash
-npm install
+npm ci
 ```
 
-### 2. Configure environment
+### 2. Optional cloud configuration
 
-Copy `.env.example` to `.env.local` and add your Supabase values:
+Copy `.env.example` to `.env.local` and add values from a **dedicated** Supabase project:
 
 ```env
-NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 ```
 
-The `/demo` route works without Supabase configuration.
+The `/demo` route works without these variables.
 
-### 3. Apply database schema
+### 3. Apply the database schema for cloud mode
 
-Run `database/schema.sql` in the dedicated Supabase project, then verify Security and Performance advisors before production use.
+Run `database/schema.sql` in the dedicated Supabase project, then review Supabase Security and Performance advisors before production use.
 
-### 4. Run
+### 4. Run the app
 
 ```bash
 npm run dev
@@ -134,7 +146,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Quality gates
+## Quality gate
 
 ```bash
 npm run test
@@ -143,56 +155,77 @@ npm run lint
 npm run build
 ```
 
-The repository CI workflow runs the static checks and production build on pushes/PRs.
+GitHub Actions runs the same sequence from the committed lockfile using `npm ci` on pull requests and pushes to `main`.
+
+The release-hardening gate has verified:
+
+- dependency installation from the lockfile
+- all 6 finance-domain tests
+- strict TypeScript compilation
+- ESLint / Next.js core-vitals rules
+- optimized Next.js 16 production build
 
 ## Project structure
 
 ```text
 src/
   app/
-    api/finance/        authenticated mutations
-    app/                private workspace
-    auth/               email confirmation + signout
-    demo/               public interactive demo
-    login/              authentication UI/actions
+    api/finance/                  authenticated finance mutations
+    app/                          private cloud workspace
+    auth/                         confirmation + POST sign-out routes
+    demo/                         public recruiter demo
+    login/                        authentication UI and actions
+    styles/                       split global design system
+    globals.css                   ordered style-module imports
   components/
-    finance-app.tsx     shared product experience
+    finance-app.tsx               shared product orchestration
+    finance-overview.tsx          dashboard + visualizations
+    finance-transactions.tsx      history/search/filter/sort
+    finance-planning.tsx          budgets + savings goals
+    finance-insights.tsx          derived insights + risk radar
+    finance-accounts-settings.tsx accounts + export/settings
+    finance-primitives.tsx        shared finance UI primitives
+    finance-views.tsx             view exports
+    transaction-modal.tsx         transaction create/edit flow
   lib/
-    finance.ts          calculation/domain engine
-    cloud-data.ts       Supabase read model
-    supabase/           browser/server/session clients
+    finance.ts                    finance domain/calculation engine
+    cloud-data.ts                 Supabase read model + starter data
+    supabase/                     browser/server/session utilities
+
 database/
-  schema.sql            schema, constraints, indexes, RLS
- tests/
-  finance.test.ts       domain tests
+  schema.sql                      schema, constraints, indexes, RLS
+
+tests/
+  finance.test.ts                 deterministic domain tests
+
 .github/workflows/
-  ci.yml                quality gate
+  ci.yml                          read-only npm-ci release gate
 ```
 
-## Deployment
+## Deployment model
 
-Recommended production flow:
-
-1. Create a dedicated Supabase project in `ap-south-1`.
-2. Apply `database/schema.sql` and run Supabase security/performance advisors.
-3. Add the production URL to Supabase Auth redirect configuration.
-4. Configure the three public environment variables in Vercel.
-5. Deploy the GitHub `main` branch to Vercel.
-6. Test `/`, `/demo`, `/login`, sign-up confirmation, `/app`, CRUD, logout, mobile layout, and exports against the production URL.
+1. Deploy `main` to Vercel; `/` and `/demo` work without a database.
+2. Create a **dedicated** Supabase project—never reuse another application's database.
+3. Apply `database/schema.sql` and review security/performance advisors.
+4. Add the Supabase URL and publishable key to Vercel.
+5. Configure the production site URL / allowed redirect URLs in Supabase Auth.
+6. Verify `/login`, email confirmation, `/app`, CRUD, logout, exports, and responsive layouts against production.
 
 ## Engineering decisions worth discussing in interviews
 
-**Why no “AI” label?** The forecasting feature is deterministic and explainable. For personal-finance software, a simple model whose assumptions can be stated is more defensible than adding an LLM for branding.
+**Why no “AI” label?** The forecast is deterministic and explainable. For personal-finance software, assumptions that can be stated and audited are more defensible than adding an LLM purely for branding.
 
-**Why a dual demo/cloud mode?** Recruiters can test the product without account friction while the authenticated architecture still demonstrates real authorization and persistence.
+**Why dual demo/cloud mode?** Recruiters can test the product immediately while the same UI still demonstrates a real authenticated persistence architecture.
 
-**Why custom visualizations?** The current chart set is small enough to implement accessibly with CSS/SVG, avoiding a large charting dependency. A heavier visualization library can be added only when interaction complexity justifies it.
+**Why custom visualizations?** The current chart set is compact enough to implement accessibly with CSS/SVG without shipping a large chart dependency. A chart library should be introduced only when interaction complexity justifies it.
 
-**How is cross-user leakage prevented?** RLS protects rows, API writes are owner-scoped, and ownership-aware composite foreign keys protect relationships.
+**How is cross-user leakage prevented?** RLS protects rows, API writes are owner-scoped, verified claims protect server routes, and ownership-aware composite foreign keys protect relationships.
+
+**Why a committed lockfile?** Production, CI, and local development resolve the same dependency graph, making builds reproducible and making `npm ci` a reliable quality gate.
 
 ## Roadmap
 
-The highest-value next extensions are recurring-transaction CRUD/detection, CSV import with preview/mapping, monthly review reports, optional PWA/offline support, and richer E2E coverage once cloud deployment is live. They are intentionally secondary to correctness and cohesion of the core product.
+High-value extensions after the production cloud deployment are recurring-transaction CRUD/detection, CSV import with preview/mapping, monthly review reports, optional PWA/offline support, and richer browser-level E2E coverage.
 
 ## License
 
