@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   budgetStatus,
@@ -192,7 +193,7 @@ export default function FinanceApp({ mode = "demo", initialData, userEmail }: Pr
   return (
     <div className="finance-shell">
       <aside className="sidebar">
-        <a className="brand" href="/"><span className="brand-mark">K</span><span>Koshora</span></a>
+        <Link className="brand" href="/"><span className="brand-mark">K</span><span>Koshora</span></Link>
         <nav>
           {nav.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}><span>{item.short}</span>{item.label}</button>)}
         </nav>
