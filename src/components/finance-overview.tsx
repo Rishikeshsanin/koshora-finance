@@ -37,12 +37,14 @@ function CashflowChart({ data }: { data: FinanceData }) {
 function Donut({ data }: { data: FinanceData }) {
   const spend = spendByCategory(data).slice(0, 5);
   const total = spend.reduce((sum, item) => sum + item.amount, 0) || 1;
-  let running = 0;
-  const parts = spend.map((item) => {
-    const start = running;
-    running += (item.amount / total) * 100;
-    return `${item.category?.accent ?? "#ddd"} ${start}% ${running}%`;
-  });
+  const { parts } = spend.reduce<{ running: number; parts: string[] }>((state, item) => {
+    const start = state.running;
+    const end = start + (item.amount / total) * 100;
+    return {
+      running: end,
+      parts: [...state.parts, `${item.category?.accent ?? "#ddd"} ${start}% ${end}%`],
+    };
+  }, { running: 0, parts: [] });
   return (
     <div className="donut-wrap">
       <div className="donut" style={{ background: `conic-gradient(${parts.join(",") || "var(--line) 0 100%"})` }} aria-label="Spending by category donut chart">

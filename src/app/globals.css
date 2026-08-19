@@ -1,0 +1,5 @@
+@import "./styles/01-core.css";
+@import "./styles/02-transactions-budgets.css";
+@import "./styles/03-planning-ui.css";
+@import "./styles/04-landing.css";
+@import "./styles/05-responsive-auth.css";

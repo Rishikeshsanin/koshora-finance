@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   budgetStatus,
@@ -192,7 +193,7 @@ export default function FinanceApp({ mode = "demo", initialData, userEmail }: Pr
   return (
     <div className="finance-shell">
       <aside className="sidebar">
-        <a className="brand" href="/"><span className="brand-mark">K</span><span>Koshora</span></a>
+        <Link className="brand" href="/"><span className="brand-mark">K</span><span>Koshora</span></Link>
         <nav>
           {nav.map((item) => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}><span>{item.short}</span>{item.label}</button>)}
         </nav>
@@ -212,8 +213,8 @@ export default function FinanceApp({ mode = "demo", initialData, userEmail }: Pr
           </div>
         </header>
 
-        {view === "overview" && <Overview data={data} summary={summary} budgets={budgets} forecast={forecast} topCategory={topCategory} monthlyBudget={monthlyBudget} monthlyBudgetUsed={monthlyBudgetUsed} setView={setView} onEdit={(tx) => setTxModal({ open: true, tx })} />}
-        {view === "transactions" && <Transactions data={data} transactions={filteredTx} search={search} setSearch={setSearch} typeFilter={typeFilter} setTypeFilter={setTypeFilter} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} sort={sort} setSort={setSort} onAdd={() => setTxModal({ open: true })} onEdit={(tx) => setTxModal({ open: true, tx })} onDelete={removeTransaction} />}
+        {view === "overview" && <Overview data={data} summary={summary} budgets={budgets} forecast={forecast} topCategory={topCategory} monthlyBudget={monthlyBudget} monthlyBudgetUsed={monthlyBudgetUsed} setView={setView} onEdit={(tx: Transaction) => setTxModal({ open: true, tx })} />}
+        {view === "transactions" && <Transactions data={data} transactions={filteredTx} search={search} setSearch={setSearch} typeFilter={typeFilter} setTypeFilter={setTypeFilter} categoryFilter={categoryFilter} setCategoryFilter={setCategoryFilter} sort={sort} setSort={setSort} onAdd={() => setTxModal({ open: true })} onEdit={(tx: Transaction) => setTxModal({ open: true, tx })} onDelete={removeTransaction} />}
         {view === "budgets" && <Budgets data={data} statuses={budgets} onSave={upsertBudget} onDelete={removeBudget} />}
         {view === "goals" && <Goals data={data} onCreate={createGoal} onContribute={contributeGoal} onDelete={removeGoal} />}
         {view === "insights" && <Insights data={data} insights={insights} forecast={forecast} />}
