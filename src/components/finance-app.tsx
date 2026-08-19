@@ -110,7 +110,8 @@ export default function FinanceApp({ mode = "demo", initialData, userEmail }: Pr
     if (mode === "cloud") {
       try {
         const response = await fetch("/api/finance", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, payload }) });
-        if (!response.ok) throw new Error((await response.json()).error ?? "Save failed");
+        const result = await response.json().catch(() => ({ error: "Unexpected server response." }));
+        if (!response.ok) throw new Error(result.error ?? "Save failed");
       } catch (error) {
         setData(previous);
         toast(error instanceof Error ? error.message : "Could not save change", "bad");
@@ -198,7 +199,7 @@ export default function FinanceApp({ mode = "demo", initialData, userEmail }: Pr
         <div className="side-foot">
           <div className="demo-chip">{mode === "demo" ? "Recruiter demo" : "Private workspace"}</div>
           <p>{mode === "demo" ? "Sample data stays in this browser." : userEmail}</p>
-          {mode === "cloud" && <a href="/auth/signout" className="text-link">Sign out</a>}
+          {mode === "cloud" && <form action="/auth/signout" method="post"><button type="submit" className="text-link">Sign out</button></form>}
         </div>
       </aside>
 
