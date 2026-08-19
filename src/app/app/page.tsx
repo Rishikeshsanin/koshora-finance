@@ -4,6 +4,11 @@ import { ensureStarterData, loadFinanceData } from "@/lib/cloud-data";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function WorkspacePage() {
+  const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
+  if (!configured) {
+    redirect(`/login?error=${encodeURIComponent("Cloud workspace is not configured on this deployment yet. Use the recruiter demo in the meantime.")}`);
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getClaims();
   const userId = data?.claims?.sub;
