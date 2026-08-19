@@ -8,12 +8,12 @@ Koshora is built to feel like a coherent fintech product rather than a tutorial 
 
 ## Experience
 
-- **Recruiter demo:** `/demo` — fully interactive sample data persisted only in the browser.
-- **Cloud workspace:** `/login` → `/app` — Supabase email/password authentication and private Postgres persistence when environment variables are configured.
+- **Live production:** https://koshora-finance.vercel.app
+- **Recruiter demo:** https://koshora-finance.vercel.app/demo — fully interactive sample data persisted only in the browser.
+- **Cloud workspace:** `/login` → `/app` — Supabase email/password authentication and private Postgres persistence when a dedicated backend is configured.
 - **Landing page:** `/` — product positioning, feature story, and direct demo entry.
-- **Production URL:** added after the first Vercel production deployment.
 
-The demo does **not** require Supabase, a bank connection, or an account.
+The demo does **not** require Supabase, a bank connection, or an account. Cloud authentication is intentionally disabled on the current production deployment until Koshora receives its own isolated Supabase project.
 
 ## Why Koshora is different
 
@@ -82,7 +82,7 @@ Demo mode and cloud mode deliberately share the same product UI and finance engi
 - **Next.js 16 / React 19 / TypeScript** — App Router, Server Components, Server Actions, Proxy, Route Handlers
 - **Supabase** — PostgreSQL, Auth, SSR cookie sessions, Row Level Security
 - **Custom CSS design system** — responsive tokens, light/dark themes, motion, visualizations, and states without a UI-template dependency
-- **Vercel** — production target
+- **Vercel** — production hosting
 - **Node test runner** — deterministic finance-domain tests
 - **ESLint + TypeScript** — static quality gates
 - **GitHub Actions** — reproducible `npm ci` release gate
@@ -204,7 +204,7 @@ tests/
 
 ## Deployment model
 
-1. Deploy `main` to Vercel; `/` and `/demo` work without a database.
+1. `main` deploys to Vercel; `/` and `/demo` work without a database.
 2. Create a **dedicated** Supabase project—never reuse another application's database.
 3. Apply `database/schema.sql` and review security/performance advisors.
 4. Add the Supabase URL and publishable key to Vercel.
