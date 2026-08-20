@@ -8,9 +8,25 @@
 
 - **Production:** https://koshora-finance.vercel.app
 - **Recruiter demo:** https://koshora-finance.vercel.app/demo
-- **Cloud workspace:** `/login` → `/app` after the Project Hub backend is activated
+- **Cloud workspace:** `/login` → `/app` after the final Data API/Auth/Vercel activation steps
 
 The recruiter demo is fully interactive and works without Supabase. Demo data stays in the browser.
+
+## Current backend status
+
+Koshora is registered in Supabase Project Hub as **App #2** with schema `koshora`.
+
+Verified database checkpoint:
+
+- app status: `active`
+- 7 Koshora finance tables
+- RLS enabled on all 7 user-facing tables
+- 28 Koshora RLS policies
+- 9 registered Koshora resources
+- 2 recorded Koshora migrations
+- Auralis remains App #1 on `auralis.*`
+
+The remaining production activation work is API exposure, Auth redirect configuration, Vercel environment variables, and end-to-end authenticated QA.
 
 ## Why Koshora is different
 
@@ -46,7 +62,8 @@ Browser
 
 Supabase Project Hub
   ├─ hub.*                 shared control plane (protected)
-  ├─ koshora.*             this app only
+  ├─ auralis.*             App #1 (protected from Koshora)
+  ├─ koshora.*             App #2 / this app only
   └─ other_app.*           protected from Koshora
 ```
 
@@ -56,6 +73,7 @@ Demo mode and cloud mode share the same UI and finance engine.
 
 Koshora uses the shared Supabase **Project Hub** model.
 
+- App number: `2`
 - App slug: `koshora`
 - Assigned schema: `koshora`
 - `public` is **not** an application workspace
@@ -69,13 +87,14 @@ Before any Supabase change, read [`AGENTS.md`](AGENTS.md) and [`SUPABASE_HUB_RUL
 
 ## Database migration order
 
-The database scripts are deliberately split by responsibility:
+Project Hub architecture v2 uses two Koshora migrations:
 
-1. `database/hub_onboarding.sql` — **Hub admin only**; registers Koshora and creates the isolated schema.
-2. `database/schema.sql` — normal Koshora app migration; starts with `hub.assert_app_scope('koshora', 'koshora')` and modifies only `koshora.*`.
-3. `database/hub_finalize.sql` — **Hub admin only**; records the Koshora RPC/migration and marks the app active after validation.
+1. `database/koshora__000_register_app.sql` — Hub-admin registration; records App #2, acknowledges the repository safety contract, asserts scope, and creates only the empty isolated `koshora` schema.
+2. `database/koshora__001_core_finance_backend.sql` — normal App #2 backend migration; creates the finance tables/functions, enables membership-gated RLS, registers Koshora resources/version metadata, and marks Koshora active.
 
-Do not run these scripts unless the live `hub.read_me_first` notice has been reviewed first.
+The older `database/hub_onboarding.sql`, `database/schema.sql`, and `database/hub_finalize.sql` files are intentionally deprecated stubs and must not be used.
+
+Do not run any Koshora migration unless the live `hub.read_me_first` notice has been reviewed first.
 
 ## Authorization model
 
@@ -153,9 +172,11 @@ src/
       browser.ts                  browser client
 
 database/
-  hub_onboarding.sql              Hub-admin onboarding
-  schema.sql                      isolated koshora.* migration
-  hub_finalize.sql                Hub-admin registry finalization
+  koshora__000_register_app.sql           App #2 registration / empty schema
+  koshora__001_core_finance_backend.sql   isolated finance backend + RLS
+  hub_onboarding.sql                      deprecated guard stub
+  schema.sql                              deprecated guard stub
+  hub_finalize.sql                        deprecated guard stub
 
 AGENTS.md                         agent boundary
 SUPABASE_HUB_RULES.md             Project Hub rules
@@ -163,21 +184,25 @@ SUPABASE_HUB_RULES.md             Project Hub rules
 
 ## Production activation checklist
 
-Before cloud mode is enabled in production:
+Completed:
 
 1. read `hub.read_me_first`
 2. verify the Koshora registry entry
 3. run `hub.assert_app_scope('koshora', 'koshora')`
-4. apply the three migration stages in order
-5. run Supabase security and performance advisors
-6. test anonymous access denial
-7. test authenticated non-member denial
-8. test same-user access
-9. test different-user denial
-10. confirm another Hub app is unaffected
-11. only then connect the frontend
+4. register App #2 and apply the isolated finance backend
+5. verify 7/7 tables have RLS and all 28 policies exist
+6. verify Auralis remains App #1 and Koshora has no cross-app ownership
 
-Project-wide changes such as adding `koshora` to the Data API exposed-schema list or changing shared Auth redirect settings require explicit impact review before execution.
+Remaining before cloud mode is considered production-ready:
+
+7. run rollback-only anonymous/non-member/cross-app isolation checks
+8. run Supabase Security and Performance Advisors
+9. expose only `koshora` through the Data API
+10. add only the Koshora production Auth redirect
+11. configure the project URL + publishable key in Vercel
+12. test signup, membership bootstrap, same-user CRUD, different-user denial, and logout
+
+Project-wide changes remain limited to the explicitly reviewed Koshora Data API exposure and Koshora Auth redirect. No other Hub app settings are changed.
 
 ## Engineering decisions worth discussing in interviews
 
