@@ -11,10 +11,24 @@
 .auth-card { width: min(100%, 420px); }
 .auth-card h2 { font-size: 34px; letter-spacing: -.05em; margin: 8px 0; }
 .auth-card > p { color: var(--muted); font-size: 12px; line-height: 1.55; margin-bottom: 28px; }
-.auth-card form { display: grid; gap: 13px; }
+.auth-card form { position: relative; display: grid; gap: 13px; }
 .auth-card label { display: grid; gap: 6px; color: var(--muted); font-size: 10px; font-weight: 700; }
 .auth-card input { padding: 12px; }
-.auth-card .primary { margin-top: 6px; }
+.auth-card .primary { margin-top: 0; }
+.auth-actions { display: grid; gap: 10px; margin-top: 6px; }
+.auth-action { width: 100%; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; }
+.auth-actions .secondary { background: transparent; }
+.auth-actions .primary { background: #f1f4f0; color: #121715; border: 1px solid #f1f4f0; }
+.auth-actions .primary:hover { background: #ffffff; opacity: 1; }
+.auth-action:disabled { cursor: wait; opacity: .68; transform: none !important; }
+.auth-name-field { animation: enter .2s ease; }
+.auth-mode-note { margin: -3px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.auth-progress { height: 3px; overflow: hidden; position: relative; border-radius: 999px; background: var(--surface-2); margin-bottom: 2px; }
+.auth-progress span { position: absolute; inset: 0 auto 0 -42%; width: 42%; border-radius: inherit; background: var(--text); animation: auth-shimmer .9s ease-in-out infinite; }
+.auth-working { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.auth-working i { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: auth-spin .65s linear infinite; }
+@keyframes auth-shimmer { 0% { left: -42%; } 100% { left: 100%; } }
+@keyframes auth-spin { to { transform: rotate(360deg); } }
 .auth-divider { display: flex; align-items: center; gap: 12px; margin: 22px 0; color: var(--muted); font-size: 10px; }
 .auth-divider:before, .auth-divider:after { content: ""; height: 1px; background: var(--line); flex: 1; }
 .auth-message { padding: 10px 12px; border-radius: 10px; margin-bottom: 14px; font-size: 11px; }
