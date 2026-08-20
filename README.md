@@ -1,145 +1,283 @@
+<div align="center">
+
+<img src="docs/assets/koshora-banner.svg" alt="Koshora — Clarity for every rupee" width="100%" />
+
 # Koshora
 
+**A production-minded personal-finance workspace built around clarity, explainable insights, and strict data isolation.**
+
 [![Quality Gate](https://github.com/Rishikeshsanin/koshora-finance/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishikeshsanin/koshora-finance/actions/workflows/ci.yml)
+![Production](https://img.shields.io/website?url=https%3A%2F%2Fkoshora-finance.vercel.app&label=production&style=flat-square)
+![Next.js](https://img.shields.io/badge/Next.js-16-111111?style=flat-square&logo=nextdotjs)
+![React](https://img.shields.io/badge/React-19-20232a?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres%20%2B%20RLS-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
+![License](https://img.shields.io/github/license/Rishikeshsanin/koshora-finance?style=flat-square)
 
-> **Clarity for every rupee.** A production-minded personal-finance workspace for transactions, budgets, savings goals, recurring commitments, and explainable cash-flow insights.
+[**Open production**](https://koshora-finance.vercel.app) · [**Recruiter demo**](https://koshora-finance.vercel.app/demo) · [**Private workspace**](https://koshora-finance.vercel.app/login) · [Architecture](docs/ARCHITECTURE.md) · [Security model](docs/SECURITY_MODEL.md)
 
-## Live experience
+</div>
 
-- **Production:** https://koshora-finance.vercel.app
-- **Recruiter demo:** https://koshora-finance.vercel.app/demo
-- **Cloud workspace:** `/login` → `/app` after the final Data API/Auth/Vercel activation steps
+---
 
-The recruiter demo is fully interactive and works without Supabase. Demo data stays in the browser.
+## What Koshora does
 
-## Current backend status
+Koshora turns transactions, budgets, recurring commitments, accounts, and savings goals into one calm financial picture. It is intentionally more than a CRUD expense tracker: the product connects day-to-day activity with deterministic forecasting, budget-risk signals, explainable insights, and a production-grade persistence/security model.
 
-Koshora is registered in Supabase Project Hub as **App #2** with schema `koshora`.
+### Product highlights
 
-Verified database checkpoint:
+- **Income, expense, and transfer transactions** with account-aware balance effects
+- **Multiple account types** — bank, cash, credit, wallet, and savings
+- **Monthly category budgets** with utilization and overspend risk
+- **Savings goals** with contribution tracking
+- **Recurring commitments** for upcoming cash-flow awareness
+- **Six-month cash-flow visualization** and category-spend analysis
+- **Explainable month-end forecasting** based on actual behavior rather than opaque “AI” branding
+- **CSV export and JSON backup**
+- **INR-first formatting** with Indian number grouping
+- **Responsive light / dark / system themes**
+- **Recruiter demo mode** that needs no account or backend
+- **Private cloud mode** backed by Supabase Auth, PostgreSQL, RLS, and app membership
+- **Session-aware navigation** so signed-in users are recognized when returning home
+- **Signup name capture** stored in Supabase Auth user metadata
+- **Auth loading feedback** with disabled submit states, spinner, and progress shimmer
 
-- app status: `active`
-- 7 Koshora finance tables
-- RLS enabled on all 7 user-facing tables
-- 28 Koshora RLS policies
-- 9 registered Koshora resources
-- 2 recorded Koshora migrations
-- Auralis remains App #1 on `auralis.*`
+---
 
-The remaining production activation work is API exposure, Auth redirect configuration, Vercel environment variables, and end-to-end authenticated QA.
+## Live product snapshots
 
-## Why Koshora is different
+> The images below are generated from the live production deployment so the README stays aligned with the shipped UI.
 
-Koshora is intentionally more than CRUD. It combines a shared finance domain model with:
+### Landing experience
 
-- income, expense, and transfer transactions
-- multiple account types
-- monthly category budgets and overspend warnings
-- savings goals and contributions
-- recurring-payment visibility
-- six-month cash-flow visualization
-- category spending analysis
-- explainable month-end forecasting
-- rule-based insights and budget-risk signals
-- CSV transaction export and JSON backup
-- INR-first formatting
-- responsive light/dark/system themes
+<a href="https://koshora-finance.vercel.app">
+  <img src="https://image.thum.io/get/width/1400/crop/780/https://koshora-finance.vercel.app/" alt="Koshora production landing page" width="100%" />
+</a>
 
-The forecast is deterministic and explainable rather than branded as “AI” for presentation value.
+### Authentication workspace
+
+<a href="https://koshora-finance.vercel.app/login">
+  <img src="https://image.thum.io/get/width/1400/crop/780/https://koshora-finance.vercel.app/login" alt="Koshora authentication page" width="100%" />
+</a>
+
+### Recruiter demo
+
+<a href="https://koshora-finance.vercel.app/demo">
+  <img src="https://image.thum.io/get/width/1400/crop/780/https://koshora-finance.vercel.app/demo" alt="Koshora recruiter demo" width="100%" />
+</a>
+
+---
+
+## Two modes, one product
+
+| Mode | Route | Persistence | Login | Purpose |
+|---|---|---|---|---|
+| Recruiter demo | `/demo` | Browser `localStorage` | No | Zero-friction product review |
+| Private workspace | `/login` → `/app` | Supabase PostgreSQL | Yes | Real user-owned cloud data |
+
+Both modes use the same finance engine and UI primitives. That keeps the recruiter experience frictionless without reducing the project to a static mockup.
+
+---
 
 ## Architecture
 
+<img src="docs/assets/architecture.svg" alt="Koshora architecture" width="100%" />
+
 ```text
-Browser
+Browser / Next.js
   ├─ /demo
-  │    └─ FinanceApp + localStorage
+  │   └─ FinanceApp + localStorage
   │
-  └─ /app
-       ├─ Supabase Auth session
-       ├─ Koshora membership bootstrap
-       ├─ koshora.* read model
-       └─ /api/finance mutations
+  └─ /login → /app
+      ├─ Supabase Auth session
+      ├─ Koshora membership bootstrap
+      ├─ server-side koshora.* read model
+      └─ /api/finance authenticated mutations
 
 Supabase Project Hub
-  ├─ hub.*                 shared control plane (protected)
-  ├─ auralis.*             App #1 (protected from Koshora)
-  ├─ koshora.*             App #2 / this app only
-  └─ other_app.*           protected from Koshora
+  ├─ hub.*       shared control plane — protected
+  ├─ auralis.*   App #1 — protected from Koshora
+  ├─ koshora.*   App #2 — this application only
+  └─ auth/storage/realtime/system schemas — protected shared infrastructure
 ```
 
-Demo mode and cloud mode share the same UI and finance engine.
+Read the deeper walkthrough in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-## Project Hub boundary
+---
 
-Koshora uses the shared Supabase **Project Hub** model.
+## Security and isolation
 
-- App number: `2`
-- App slug: `koshora`
-- Assigned schema: `koshora`
-- `public` is **not** an application workspace
-- every app-facing table uses RLS
-- policies require both row ownership and active Koshora membership
-- application code targets `koshora` explicitly with `supabase.schema("koshora")`
-- project-level secret/service-role credentials are not used by ordinary Koshora code
-- all other application schemas are treated as separate-company boundaries
+Koshora is registered in the shared Supabase **Project Hub** as:
 
-Before any Supabase change, read [`AGENTS.md`](AGENTS.md) and [`SUPABASE_HUB_RULES.md`](SUPABASE_HUB_RULES.md).
+| Property | Value |
+|---|---|
+| App number | `2` |
+| App slug | `koshora` |
+| Application schema | `koshora` |
+| Status | `active` |
+| User-facing tables | `7` |
+| RLS-enabled tables | `7 / 7` |
+| RLS policies | `28` |
+| Koshora Hub resources | `9` |
+| App migrations | `3` |
 
-## Database migration order
-
-Project Hub architecture v2 uses two Koshora migrations:
-
-1. `database/koshora__000_register_app.sql` — Hub-admin registration; records App #2, acknowledges the repository safety contract, asserts scope, and creates only the empty isolated `koshora` schema.
-2. `database/koshora__001_core_finance_backend.sql` — normal App #2 backend migration; creates the finance tables/functions, enables membership-gated RLS, registers Koshora resources/version metadata, and marks Koshora active.
-
-The older `database/hub_onboarding.sql`, `database/schema.sql`, and `database/hub_finalize.sql` files are intentionally deprecated stubs and must not be used.
-
-Do not run any Koshora migration unless the live `hub.read_me_first` notice has been reviewed first.
-
-## Authorization model
-
-All Hub apps share `auth.users`, so authentication alone is not Koshora authorization.
-
-Koshora RLS requires:
+Authorization is deliberately stronger than “the user is authenticated.” Every user-facing RLS policy requires **both** active Koshora membership and row ownership:
 
 ```sql
 (select hub.current_user_has_app('koshora'))
 and (select auth.uid()) = user_id
 ```
 
-A narrow `koshora.koshora_join_current_user()` security-definer RPC can enroll only the currently authenticated user into Koshora. It cannot create membership in another app and cannot reactivate a disabled membership.
+The policy expressions use scalar InitPlans, so session/membership checks are evaluated once per statement rather than once per row.
 
-Ownership-aware composite foreign keys also prevent a transaction or budget from referencing another user's account/category by UUID.
+Verified isolation checks include:
 
-## Stack
+- anonymous schema usage denied
+- `service_role` schema usage not granted to ordinary Koshora app access
+- authenticated Koshora schema usage allowed
+- non-member authenticated user sees **0 Koshora rows**
+- forbidden cross-app foreign keys: **0**
+- Koshora policies referencing Auralis: **0**
+- off-scope Koshora Hub resources: **0**
+- Supabase Performance Advisor after RLS optimization: **0 errors / 0 warnings**
 
-- Next.js 16
-- React 19
-- TypeScript
-- Supabase Auth + PostgreSQL + RLS
-- Vercel
-- GitHub Actions
-- custom CSS/SVG visual system
+The remaining Security Advisor warnings belong to a shared Project Hub `public.rls_auto_enable()` helper and are intentionally not modified by Koshora.
 
-## Local development
+More detail: [`docs/SECURITY_MODEL.md`](docs/SECURITY_MODEL.md).
+
+> **Important for agents and contributors:** read [`AGENTS.md`](AGENTS.md) and [`SUPABASE_HUB_RULES.md`](SUPABASE_HUB_RULES.md) before any database work.
+
+---
+
+## Database migration history
+
+Project Hub architecture v2 uses app-prefixed migrations:
+
+1. `database/koshora__000_register_app.sql`  
+   Registers **App #2**, acknowledges the repository safety contract, asserts scope, and creates only the empty `koshora` schema.
+
+2. `database/koshora__001_core_finance_backend.sql`  
+   Creates the seven finance tables, membership RPC, RLS policies, Hub resources/version metadata, and activates Koshora.
+
+3. `database/koshora__002_optimize_rls_initplans.sql`  
+   Rewrites the 28 Koshora RLS policies to avoid per-row auth/membership re-evaluation while preserving authorization semantics.
+
+The legacy `hub_onboarding.sql`, `schema.sql`, and `hub_finalize.sql` files are deprecated guard stubs and must not be used.
+
+---
+
+## Data model
+
+```text
+auth.users
+   │
+   ├── koshora.profiles
+   ├── koshora.categories ─────────┐
+   ├── koshora.accounts ───────┐   │
+   ├── koshora.transactions ◄──┴───┘
+   ├── koshora.budgets ────────────┘
+   ├── koshora.recurring_transactions
+   └── koshora.savings_goals
+```
+
+Ownership-aware composite foreign keys prevent a transaction or budget from pointing at another user’s account/category merely by knowing its UUID.
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 App Router |
+| UI | React 19 + custom CSS/SVG system |
+| Language | TypeScript 5 |
+| Auth | Supabase Auth |
+| Database | PostgreSQL on Supabase |
+| Authorization | Row Level Security + Hub membership |
+| SSR integration | `@supabase/ssr` |
+| Hosting | Vercel |
+| CI | GitHub Actions |
+| Testing | Node test runner + deterministic finance unit tests |
+
+---
+
+## Repository layout
+
+```text
+src/
+  app/
+    api/finance/          authenticated finance mutations
+    app/                  private cloud workspace
+    auth/                 confirmation + POST sign-out
+    demo/                 public recruiter demo
+    login/                interactive auth UI + server actions
+  components/             finance views, modal flows, workspace UI
+  lib/
+    finance.ts            domain/calculation engine
+    cloud-data.ts         Koshora cloud read model + starter data
+    supabase/
+      config.ts           public Project Hub configuration
+      koshora.ts          schema + membership boundary
+      server.ts           SSR server client
+      browser.ts          browser client
+
+database/
+  koshora__000_register_app.sql
+  koshora__001_core_finance_backend.sql
+  koshora__002_optimize_rls_initplans.sql
+
+docs/
+  ARCHITECTURE.md
+  SECURITY_MODEL.md
+  DEMO_GUIDE.md
+  INTERVIEW_GUIDE.md
+  assets/
+
+.github/
+  workflows/ci.yml
+  ISSUE_TEMPLATE/
+  pull_request_template.md
+```
+
+---
+
+## Run locally
+
+### 1. Clone and install
 
 ```bash
+git clone https://github.com/Rishikeshsanin/koshora-finance.git
+cd koshora-finance
 npm ci
+```
+
+### 2. Start the app
+
+```bash
 npm run dev
 ```
 
-The demo requires no environment variables.
+Open `http://localhost:3000`.
 
-For Hub cloud mode:
+The recruiter demo works without environment variables.
+
+### 3. Optional cloud configuration
+
+Copy `.env.example` to `.env.local` and provide **publishable** Supabase configuration only:
 
 ```env
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 ```
 
-Only publishable credentials belong in app environment variables.
+Never put a service-role/secret key in browser-facing application configuration.
+
+---
 
 ## Quality gate
+
+Run the same checks used by CI:
 
 ```bash
 npm run test
@@ -148,72 +286,90 @@ npm run lint
 npm run build
 ```
 
-GitHub Actions runs the same deterministic `npm ci` release gate on pull requests and `main`.
+Current deterministic finance test suite: **6 / 6 passing**.
 
-Current verified finance tests: **6/6**.
+GitHub Actions runs the same release gate on every pull request and push to `main`.
 
-## Project structure
+---
 
-```text
-src/
-  app/
-    api/finance/                  authenticated mutations
-    app/                          private cloud workspace
-    auth/                         confirmation + POST sign-out
-    demo/                         public recruiter demo
-    login/                        auth UI and actions
-  components/                     finance product views
-  lib/
-    finance.ts                    domain/calculation engine
-    cloud-data.ts                 Koshora cloud read model
-    supabase/
-      koshora.ts                  schema + membership boundary
-      server.ts                   SSR server client
-      browser.ts                  browser client
+## Production validation
 
-database/
-  koshora__000_register_app.sql           App #2 registration / empty schema
-  koshora__001_core_finance_backend.sql   isolated finance backend + RLS
-  hub_onboarding.sql                      deprecated guard stub
-  schema.sql                              deprecated guard stub
-  hub_finalize.sql                        deprecated guard stub
+The production hardening process included:
 
-AGENTS.md                         agent boundary
-SUPABASE_HUB_RULES.md             Project Hub rules
-```
+- Project Hub scope assertion before Koshora database changes
+- App #2 registration verification
+- `7 / 7` finance tables with RLS
+- `28` membership + ownership policies
+- rollback-only non-member visibility test
+- static cross-app boundary audit
+- Supabase Security Advisor review
+- RLS InitPlan performance migration
+- Supabase Performance Advisor rerun: **0 errors / 0 warnings**
+- exact Koshora Auth redirect allowlist entry
+- Koshora custom schema exposed through the Data API
+- Vercel production build/route smoke tests
+- unauthenticated `/app` fail-closed redirect to `/login`
+- runtime regression checks after auth/session changes
 
-## Production activation checklist
+See [`RELEASE.md`](RELEASE.md) for the operational release checklist.
 
-Completed:
+---
 
-1. read `hub.read_me_first`
-2. verify the Koshora registry entry
-3. run `hub.assert_app_scope('koshora', 'koshora')`
-4. register App #2 and apply the isolated finance backend
-5. verify 7/7 tables have RLS and all 28 policies exist
-6. verify Auralis remains App #1 and Koshora has no cross-app ownership
+## Recruiter / reviewer path
 
-Remaining before cloud mode is considered production-ready:
+If you have sixty seconds:
 
-7. run rollback-only anonymous/non-member/cross-app isolation checks
-8. run Supabase Security and Performance Advisors
-9. expose only `koshora` through the Data API
-10. add only the Koshora production Auth redirect
-11. configure the project URL + publishable key in Vercel
-12. test signup, membership bootstrap, same-user CRUD, different-user denial, and logout
+1. Open the [live demo](https://koshora-finance.vercel.app/demo).
+2. Add or edit a transaction.
+3. Check how account balance, cash flow, budgets, and insights respond.
+4. Open **Budgets**, **Goals**, and **Insights**.
+5. Switch theme / resize to mobile.
+6. Review the architecture and RLS model in this README.
 
-Project-wide changes remain limited to the explicitly reviewed Koshora Data API exposure and Koshora Auth redirect. No other Hub app settings are changed.
+Full walkthrough: [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md).
 
-## Engineering decisions worth discussing in interviews
+---
 
-**Why dual demo/cloud mode?** Recruiters get a zero-friction product demo while the same UI still supports a real authenticated persistence architecture.
+## Engineering decisions worth discussing
 
-**Why membership-gated RLS?** Shared Supabase Auth means `auth.uid()` identifies a user but does not prove that user belongs to Koshora.
+**Why demo + cloud modes?**  
+Recruiters get a zero-friction product experience, while the same UI still demonstrates real authenticated persistence architecture.
 
-**Why a dedicated application schema?** It limits accidental cross-app access and makes ownership, migrations, and security review auditable.
+**Why membership-gated RLS?**  
+Shared Supabase Auth identifies a person; it does not prove that person belongs to every application in Project Hub.
 
-**Why no service-role key in the app?** RLS remains the authorization boundary instead of being bypassed by ordinary server code.
+**Why one application schema?**  
+It gives Koshora an auditable database boundary and prevents “convenient” cross-project table access.
+
+**Why deterministic forecasting instead of an AI label?**  
+The forecast is transparent and explainable, which is more useful for a portfolio discussion than hiding simple logic behind AI branding.
+
+**Why no ordinary service-role usage?**  
+RLS remains the authorization boundary instead of being bypassed by routine server code.
+
+More talking points: [`docs/INTERVIEW_GUIDE.md`](docs/INTERVIEW_GUIDE.md).
+
+---
+
+## Project governance
+
+- Contributions: [`CONTRIBUTING.md`](CONTRIBUTING.md)
+- Security reporting: [`SECURITY.md`](SECURITY.md)
+- Database boundary: [`SUPABASE_HUB_RULES.md`](SUPABASE_HUB_RULES.md)
+- Agent instructions: [`AGENTS.md`](AGENTS.md)
+- Changelog: [`CHANGELOG.md`](CHANGELOG.md)
+- Code of conduct: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
+
+---
 
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
+
+<div align="center">
+
+**Koshora — clarity for every rupee.**
+
+[Production](https://koshora-finance.vercel.app) · [Demo](https://koshora-finance.vercel.app/demo) · [Source](https://github.com/Rishikeshsanin/koshora-finance)
+
+</div>
