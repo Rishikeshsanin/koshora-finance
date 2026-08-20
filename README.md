@@ -4,147 +4,121 @@
 
 > **Clarity for every rupee.** A production-minded personal-finance workspace for transactions, budgets, savings goals, recurring commitments, and explainable cash-flow insights.
 
-Koshora is built to feel like a coherent fintech product rather than a tutorial expense tracker. It combines a zero-friction recruiter demo with a secure Supabase cloud architecture, so the same interface can be explored instantly and can also operate as a private per-user finance workspace when a dedicated backend is configured.
+## Live experience
 
-## Experience
+- **Production:** https://koshora-finance.vercel.app
+- **Recruiter demo:** https://koshora-finance.vercel.app/demo
+- **Cloud workspace:** `/login` → `/app` after the Project Hub backend is activated
 
-- **Live production:** https://koshora-finance.vercel.app
-- **Recruiter demo:** https://koshora-finance.vercel.app/demo — fully interactive sample data persisted only in the browser.
-- **Cloud workspace:** `/login` → `/app` — Supabase email/password authentication and private Postgres persistence when a dedicated backend is configured.
-- **Landing page:** `/` — product positioning, feature story, and direct demo entry.
-
-The demo does **not** require Supabase, a bank connection, or an account. Cloud authentication is intentionally disabled on the current production deployment until Koshora receives its own isolated Supabase project.
+The recruiter demo is fully interactive and works without Supabase. Demo data stays in the browser.
 
 ## Why Koshora is different
 
-### A dashboard that explains, not just displays
-Koshora computes current balance, monthly income and expenses, savings rate, month-over-month expense movement, category concentration, budget remaining, and a financial-health signal from one shared transaction model.
+Koshora is intentionally more than CRUD. It combines a shared finance domain model with:
 
-### Explainable forecasting
-The month-end forecast is intentionally deterministic. It projects variable spending from observed daily behavior plus known recurring commitments and exposes a confidence label instead of branding ordinary arithmetic as “AI.”
+- income, expense, and transfer transactions
+- multiple account types
+- monthly category budgets and overspend warnings
+- savings goals and contributions
+- recurring-payment visibility
+- six-month cash-flow visualization
+- category spending analysis
+- explainable month-end forecasting
+- rule-based insights and budget-risk signals
+- CSV transaction export and JSON backup
+- INR-first formatting
+- responsive light/dark/system themes
 
-### Budget risk before overspend
-Category budgets calculate utilization, remaining allowance, overspend, and risk state. The Insights view surfaces categories approaching or crossing their limits.
-
-### A real recruiter demo
-The public demo supports transaction CRUD, search/filter/sort, budgets, savings goals, accounts, exports, themes, responsive layouts, and reset-to-seed behavior. It is an interactive product surface—not a screenshot-only mockup.
-
-## Core features
-
-- Income, expense, and account-transfer transactions
-- Add, edit, delete, search, filter, and sort transaction history
-- Category-aware spending analysis
-- Bank, cash, wallet, credit, and savings accounts
-- Monthly category budgets with overspend warnings
-- Savings goals and contributions
-- Recurring-payment visibility
-- Six-month cash-flow visualization
-- Spending-by-category visualization
-- Explainable month-end spending forecast
-- Rule-based spending insights and budget-risk radar
-- CSV transaction export and JSON backup export
-- INR-first formatting with Indian digit grouping
-- Light, dark, and system themes
-- Responsive desktop, tablet, and mobile layouts
-- Browser-only recruiter demo using `localStorage`
-- Supabase SSR authentication architecture
-- PostgreSQL Row Level Security and ownership-aware foreign keys
-- Server-side mutation validation and owner-scoped writes
+The forecast is deterministic and explainable rather than branded as “AI” for presentation value.
 
 ## Architecture
 
 ```text
 Browser
   ├─ /demo
-  │    └─ shared FinanceApp + localStorage demo repository
+  │    └─ FinanceApp + localStorage
   │
-  └─ /app (authenticated)
-       ├─ Next.js Server Component
-       ├─ Supabase SSR session / getClaims()
-       ├─ cloud read model -> Postgres + RLS
+  └─ /app
+       ├─ Supabase Auth session
+       ├─ Koshora membership bootstrap
+       ├─ koshora.* read model
        └─ /api/finance mutations
-            └─ validation + authenticated owner-scoped writes
 
-Shared finance domain engine
-  ├─ summary metrics
-  ├─ category aggregation
-  ├─ budget utilization
-  ├─ account cash flow
-  ├─ insight generation
-  ├─ month-end forecast
-  └─ CSV export
+Supabase Project Hub
+  ├─ hub.*                 shared control plane (protected)
+  ├─ koshora.*             this app only
+  └─ other_app.*           protected from Koshora
 ```
 
-Demo mode and cloud mode deliberately share the same product UI and finance engine. That keeps recruiter-visible behavior aligned with the real authenticated implementation instead of maintaining a separate fake demo.
+Demo mode and cloud mode share the same UI and finance engine.
+
+## Project Hub boundary
+
+Koshora uses the shared Supabase **Project Hub** model.
+
+- App slug: `koshora`
+- Assigned schema: `koshora`
+- `public` is **not** an application workspace
+- every app-facing table uses RLS
+- policies require both row ownership and active Koshora membership
+- application code targets `koshora` explicitly with `supabase.schema("koshora")`
+- project-level secret/service-role credentials are not used by ordinary Koshora code
+- all other application schemas are treated as separate-company boundaries
+
+Before any Supabase change, read [`AGENTS.md`](AGENTS.md) and [`SUPABASE_HUB_RULES.md`](SUPABASE_HUB_RULES.md).
+
+## Database migration order
+
+The database scripts are deliberately split by responsibility:
+
+1. `database/hub_onboarding.sql` — **Hub admin only**; registers Koshora and creates the isolated schema.
+2. `database/schema.sql` — normal Koshora app migration; starts with `hub.assert_app_scope('koshora', 'koshora')` and modifies only `koshora.*`.
+3. `database/hub_finalize.sql` — **Hub admin only**; records the Koshora RPC/migration and marks the app active after validation.
+
+Do not run these scripts unless the live `hub.read_me_first` notice has been reviewed first.
+
+## Authorization model
+
+All Hub apps share `auth.users`, so authentication alone is not Koshora authorization.
+
+Koshora RLS requires:
+
+```sql
+(select hub.current_user_has_app('koshora'))
+and (select auth.uid()) = user_id
+```
+
+A narrow `koshora.koshora_join_current_user()` security-definer RPC can enroll only the currently authenticated user into Koshora. It cannot create membership in another app and cannot reactivate a disabled membership.
+
+Ownership-aware composite foreign keys also prevent a transaction or budget from referencing another user's account/category by UUID.
 
 ## Stack
 
-- **Next.js 16 / React 19 / TypeScript** — App Router, Server Components, Server Actions, Proxy, Route Handlers
-- **Supabase** — PostgreSQL, Auth, SSR cookie sessions, Row Level Security
-- **Custom CSS design system** — responsive tokens, light/dark themes, motion, visualizations, and states without a UI-template dependency
-- **Vercel** — production hosting
-- **Node test runner** — deterministic finance-domain tests
-- **ESLint + TypeScript** — static quality gates
-- **GitHub Actions** — reproducible `npm ci` release gate
-
-## Security model
-
-Koshora never requests banking passwords or direct banking credentials.
-
-The cloud workspace uses the authenticated Supabase user ID as the ownership boundary. Every exposed finance table has RLS enabled. SELECT/INSERT/UPDATE/DELETE policies restrict access to `auth.uid()`, and UPDATE policies use both `USING` and `WITH CHECK`.
-
-Relationships are protected too: composite ownership foreign keys such as `(account_id, user_id)` prevent a user from referencing another user's account or category even if an unrelated UUID becomes known. Server mutation routes derive identity from verified Supabase claims and scope writes by both row ID and owner.
-
-The SSR proxy propagates Supabase session cookies **and cache-control headers** during token refreshes, and authenticated API routes return JSON authorization errors instead of HTML redirects. Sign-out is POST-only.
-
-Only Supabase **publishable** credentials belong in browser-visible environment variables. A secret/service-role key must never be exposed to the frontend.
-
-## Database
-
-The production schema lives in [`database/schema.sql`](database/schema.sql).
-
-Core tables:
-
-- `profiles`
-- `categories`
-- `accounts`
-- `transactions`
-- `budgets`
-- `recurring_transactions`
-- `savings_goals`
-
-The schema includes indexes, amount/type constraints, valid-transfer constraints, unique monthly category budgets, RLS policies, and ownership-aware relationships.
+- Next.js 16
+- React 19
+- TypeScript
+- Supabase Auth + PostgreSQL + RLS
+- Vercel
+- GitHub Actions
+- custom CSS/SVG visual system
 
 ## Local development
 
-### 1. Install the locked dependency graph
-
 ```bash
 npm ci
+npm run dev
 ```
 
-### 2. Optional cloud configuration
+The demo requires no environment variables.
 
-Copy `.env.example` to `.env.local` and add values from a **dedicated** Supabase project:
+For Hub cloud mode:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 ```
 
-The `/demo` route works without these variables.
-
-### 3. Apply the database schema for cloud mode
-
-Run `database/schema.sql` in the dedicated Supabase project, then review Supabase Security and Performance advisors before production use.
-
-### 4. Run the app
-
-```bash
-npm run dev
-```
-
-Open `http://localhost:3000`.
+Only publishable credentials belong in app environment variables.
 
 ## Quality gate
 
@@ -155,77 +129,65 @@ npm run lint
 npm run build
 ```
 
-GitHub Actions runs the same sequence from the committed lockfile using `npm ci` on pull requests and pushes to `main`.
+GitHub Actions runs the same deterministic `npm ci` release gate on pull requests and `main`.
 
-The release-hardening gate has verified:
-
-- dependency installation from the lockfile
-- all 6 finance-domain tests
-- strict TypeScript compilation
-- ESLint / Next.js core-vitals rules
-- optimized Next.js 16 production build
+Current verified finance tests: **6/6**.
 
 ## Project structure
 
 ```text
 src/
   app/
-    api/finance/                  authenticated finance mutations
+    api/finance/                  authenticated mutations
     app/                          private cloud workspace
-    auth/                         confirmation + POST sign-out routes
+    auth/                         confirmation + POST sign-out
     demo/                         public recruiter demo
-    login/                        authentication UI and actions
-    styles/                       split global design system
-    globals.css                   ordered style-module imports
-  components/
-    finance-app.tsx               shared product orchestration
-    finance-overview.tsx          dashboard + visualizations
-    finance-transactions.tsx      history/search/filter/sort
-    finance-planning.tsx          budgets + savings goals
-    finance-insights.tsx          derived insights + risk radar
-    finance-accounts-settings.tsx accounts + export/settings
-    finance-primitives.tsx        shared finance UI primitives
-    finance-views.tsx             view exports
-    transaction-modal.tsx         transaction create/edit flow
+    login/                        auth UI and actions
+  components/                     finance product views
   lib/
-    finance.ts                    finance domain/calculation engine
-    cloud-data.ts                 Supabase read model + starter data
-    supabase/                     browser/server/session utilities
+    finance.ts                    domain/calculation engine
+    cloud-data.ts                 Koshora cloud read model
+    supabase/
+      koshora.ts                  schema + membership boundary
+      server.ts                   SSR server client
+      browser.ts                  browser client
 
 database/
-  schema.sql                      schema, constraints, indexes, RLS
+  hub_onboarding.sql              Hub-admin onboarding
+  schema.sql                      isolated koshora.* migration
+  hub_finalize.sql                Hub-admin registry finalization
 
-tests/
-  finance.test.ts                 deterministic domain tests
-
-.github/workflows/
-  ci.yml                          read-only npm-ci release gate
+AGENTS.md                         agent boundary
+SUPABASE_HUB_RULES.md             Project Hub rules
 ```
 
-## Deployment model
+## Production activation checklist
 
-1. `main` deploys to Vercel; `/` and `/demo` work without a database.
-2. Create a **dedicated** Supabase project—never reuse another application's database.
-3. Apply `database/schema.sql` and review security/performance advisors.
-4. Add the Supabase URL and publishable key to Vercel.
-5. Configure the production site URL / allowed redirect URLs in Supabase Auth.
-6. Verify `/login`, email confirmation, `/app`, CRUD, logout, exports, and responsive layouts against production.
+Before cloud mode is enabled in production:
+
+1. read `hub.read_me_first`
+2. verify the Koshora registry entry
+3. run `hub.assert_app_scope('koshora', 'koshora')`
+4. apply the three migration stages in order
+5. run Supabase security and performance advisors
+6. test anonymous access denial
+7. test authenticated non-member denial
+8. test same-user access
+9. test different-user denial
+10. confirm another Hub app is unaffected
+11. only then connect the frontend
+
+Project-wide changes such as adding `koshora` to the Data API exposed-schema list or changing shared Auth redirect settings require explicit impact review before execution.
 
 ## Engineering decisions worth discussing in interviews
 
-**Why no “AI” label?** The forecast is deterministic and explainable. For personal-finance software, assumptions that can be stated and audited are more defensible than adding an LLM purely for branding.
+**Why dual demo/cloud mode?** Recruiters get a zero-friction product demo while the same UI still supports a real authenticated persistence architecture.
 
-**Why dual demo/cloud mode?** Recruiters can test the product immediately while the same UI still demonstrates a real authenticated persistence architecture.
+**Why membership-gated RLS?** Shared Supabase Auth means `auth.uid()` identifies a user but does not prove that user belongs to Koshora.
 
-**Why custom visualizations?** The current chart set is compact enough to implement accessibly with CSS/SVG without shipping a large chart dependency. A chart library should be introduced only when interaction complexity justifies it.
+**Why a dedicated application schema?** It limits accidental cross-app access and makes ownership, migrations, and security review auditable.
 
-**How is cross-user leakage prevented?** RLS protects rows, API writes are owner-scoped, verified claims protect server routes, and ownership-aware composite foreign keys protect relationships.
-
-**Why a committed lockfile?** Production, CI, and local development resolve the same dependency graph, making builds reproducible and making `npm ci` a reliable quality gate.
-
-## Roadmap
-
-High-value extensions after the production cloud deployment are recurring-transaction CRUD/detection, CSV import with preview/mapping, monthly review reports, optional PWA/offline support, and richer browser-level E2E coverage.
+**Why no service-role key in the app?** RLS remains the authorization boundary instead of being bypassed by ordinary server code.
 
 ## License
 
