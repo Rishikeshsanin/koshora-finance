@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="780" viewBox="0 0 1400 780" role="img" aria-labelledby="title desc">
+  <title id="title">Koshora architecture</title>
+  <desc id="desc">Architecture diagram showing the browser demo and private workspace, Supabase Project Hub boundary, RLS and Vercel.</desc>
+  <rect width="1400" height="780" rx="28" fill="#0d100f"/>
+  <text x="70" y="78" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="34" font-weight="800" fill="#eef6ef">Koshora architecture</text>
+  <text x="70" y="112" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" fill="#9ba49d">One UI, two persistence modes, one strict application boundary.</text>
+  <g font-family="Inter,Segoe UI,Arial,sans-serif">
+    <rect x="70" y="165" width="380" height="500" rx="22" fill="#141816" stroke="#29312c"/>
+    <text x="100" y="210" font-size="21" font-weight="800" fill="#eef6ef">Browser / Next.js</text>
+    <rect x="100" y="245" width="320" height="130" rx="18" fill="#1a201d"/>
+    <text x="125" y="283" font-size="18" font-weight="800" fill="#d9f8b8">/demo</text>
+    <text x="125" y="316" font-size="15" fill="#eef6ef">Recruiter-first, zero-friction mode</text>
+    <text x="125" y="342" font-size="14" fill="#9ba49d">localStorage · same finance engine · no login</text>
+    <rect x="100" y="405" width="320" height="220" rx="18" fill="#1a201d"/>
+    <text x="125" y="443" font-size="18" font-weight="800" fill="#d9f8b8">/login → /app</text>
+    <text x="125" y="477" font-size="15" fill="#eef6ef">Private cloud workspace</text>
+    <text x="125" y="510" font-size="14" fill="#9ba49d">Supabase Auth session</text>
+    <text x="125" y="536" font-size="14" fill="#9ba49d">Koshora membership bootstrap</text>
+    <text x="125" y="562" font-size="14" fill="#9ba49d">Server reads + /api/finance mutations</text>
+    <text x="125" y="588" font-size="14" fill="#9ba49d">Session-aware navigation</text>
+    <path d="M455 515 C540 515 520 515 595 515" fill="none" stroke="#d9f8b8" stroke-width="3"/>
+    <polygon points="595,515 579,506 579,524" fill="#d9f8b8"/>
+    <rect x="595" y="165" width="735" height="500" rx="22" fill="#141816" stroke="#29312c"/>
+    <text x="625" y="210" font-size="21" font-weight="800" fill="#eef6ef">Supabase Project Hub</text>
+    <text x="625" y="237" font-size="14" fill="#9ba49d">Shared infrastructure, application-owned schemas.</text>
+    <rect x="625" y="275" width="205" height="120" rx="16" fill="#1a201d" stroke="#29312c"/>
+    <text x="650" y="310" font-size="17" font-weight="800" fill="#eef6ef">hub.*</text>
+    <text x="650" y="340" font-size="13" fill="#9ba49d">registry · membership</text>
+    <text x="650" y="364" font-size="13" fill="#9ba49d">scope assertions · audit</text>
+    <rect x="860" y="275" width="205" height="120" rx="16" fill="#1a201d" stroke="#29312c"/>
+    <text x="885" y="310" font-size="17" font-weight="800" fill="#eef6ef">auralis.*</text>
+    <text x="885" y="340" font-size="13" fill="#9ba49d">App #1</text>
+    <text x="885" y="364" font-size="13" fill="#9ba49d">protected from Koshora</text>
+    <rect x="1095" y="275" width="205" height="120" rx="16" fill="#1a201d" stroke="#29312c"/>
+    <text x="1120" y="310" font-size="17" font-weight="800" fill="#eef6ef">system schemas</text>
+    <text x="1120" y="340" font-size="13" fill="#9ba49d">auth · storage · realtime</text>
+    <text x="1120" y="364" font-size="13" fill="#9ba49d">shared + protected</text>
+    <rect x="625" y="430" width="675" height="195" rx="18" fill="#d9f8b8"/>
+    <text x="655" y="470" font-size="22" font-weight="900" fill="#121715">koshora.* — App #2</text>
+    <text x="655" y="505" font-size="15" fill="#121715">profiles · categories · accounts · transactions · budgets · recurring_transactions · savings_goals</text>
+    <text x="655" y="545" font-size="15" font-weight="700" fill="#121715">RLS = active Koshora membership + row ownership</text>
+    <text x="655" y="578" font-size="14" fill="#35423a">28 optimized policies · no cross-app FKs · no ordinary service-role bypass</text>
+  </g>
+  <text x="70" y="724" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" fill="#68706a">Deployment: GitHub → Quality Gate → Vercel production · Database migrations are app-scoped and auditable.</text>
+</svg>
