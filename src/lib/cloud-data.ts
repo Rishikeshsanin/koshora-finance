@@ -1,18 +1,20 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { DEFAULT_CATEGORIES, type FinanceData } from "@/lib/finance";
+import { koshoraDb } from "@/lib/supabase/koshora";
 
 function num(value: unknown) {
   return typeof value === "number" ? value : Number(value ?? 0);
 }
 
 export async function ensureStarterData(supabase: SupabaseClient, userId: string) {
+  const db = koshoraDb(supabase);
   const [{ count: categoryCount }, { count: accountCount }] = await Promise.all([
-    supabase.from("categories").select("id", { count: "exact", head: true }).eq("user_id", userId),
-    supabase.from("accounts").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    db.from("categories").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    db.from("accounts").select("id", { count: "exact", head: true }).eq("user_id", userId),
   ]);
 
   if (!categoryCount) {
-    const { error } = await supabase.from("categories").insert(
+    const { error } = await db.from("categories").insert(
       DEFAULT_CATEGORIES.map((c) => ({
         id: crypto.randomUUID(),
         user_id: userId,
@@ -27,7 +29,7 @@ export async function ensureStarterData(supabase: SupabaseClient, userId: string
   }
 
   if (!accountCount) {
-    const { error } = await supabase.from("accounts").insert([
+    const { error } = await db.from("accounts").insert([
       { user_id: userId, name: "Main Bank", type: "bank", opening_balance: 0 },
       { user_id: userId, name: "Cash", type: "cash", opening_balance: 0 },
     ]);
@@ -36,13 +38,14 @@ export async function ensureStarterData(supabase: SupabaseClient, userId: string
 }
 
 export async function loadFinanceData(supabase: SupabaseClient, userId: string): Promise<FinanceData> {
+  const db = koshoraDb(supabase);
   const [categoriesR, accountsR, txR, budgetsR, goalsR, recurringR] = await Promise.all([
-    supabase.from("categories").select("id,slug,name,kind,icon,accent").eq("user_id", userId).order("name"),
-    supabase.from("accounts").select("id,name,type,opening_balance").eq("user_id", userId).order("created_at"),
-    supabase.from("transactions").select("id,type,amount,description,note,category_id,account_id,to_account_id,occurred_on,is_recurring").eq("user_id", userId).order("occurred_on", { ascending: false }).limit(500),
-    supabase.from("budgets").select("id,category_id,month_start,amount_limit").eq("user_id", userId).order("month_start", { ascending: false }),
-    supabase.from("savings_goals").select("id,name,current_amount,target_amount,target_date").eq("user_id", userId).order("created_at"),
-    supabase.from("recurring_transactions").select("id,name,amount,type,category_id,account_id,next_date,frequency").eq("user_id", userId).eq("active", true).order("next_date"),
+    db.from("categories").select("id,slug,name,kind,icon,accent").eq("user_id", userId).order("name"),
+    db.from("accounts").select("id,name,type,opening_balance").eq("user_id", userId).order("created_at"),
+    db.from("transactions").select("id,type,amount,description,note,category_id,account_id,to_account_id,occurred_on,is_recurring").eq("user_id", userId).order("occurred_on", { ascending: false }).limit(500),
+    db.from("budgets").select("id,category_id,month_start,amount_limit").eq("user_id", userId).order("month_start", { ascending: false }),
+    db.from("savings_goals").select("id,name,current_amount,target_amount,target_date").eq("user_id", userId).order("created_at"),
+    db.from("recurring_transactions").select("id,name,amount,type,category_id,account_id,next_date,frequency").eq("user_id", userId).eq("active", true).order("next_date"),
   ]);
 
   const firstError = [categoriesR.error, accountsR.error, txR.error, budgetsR.error, goalsR.error, recurringR.error].find(Boolean);
