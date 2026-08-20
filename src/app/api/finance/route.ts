@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { koshoraDb } from "@/lib/supabase/koshora";
 
 type Body = { action?: string; payload?: Record<string, unknown> };
 const allowedAccountTypes = new Set(["cash", "bank", "credit", "wallet", "savings"]);
@@ -28,6 +29,7 @@ export async function POST(request: Request) {
     const userId = claimsData?.claims?.sub;
     if (claimsError || !userId) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
 
+    const db = koshoraDb(supabase);
     const body = await request.json() as Body;
     const action = body.action ?? "";
     const p = body.payload ?? {};
@@ -47,34 +49,34 @@ export async function POST(request: Request) {
       if (type === "transfer" && (!toAccountId || toAccountId === accountId)) return NextResponse.json({ error: "Choose a different destination account." }, { status: 400 });
       const values = { user_id: userId, type, amount, description, note: optionalText(p.note), category_id: type === "transfer" ? null : id(p.categoryId), account_id: accountId, to_account_id: type === "transfer" ? toAccountId : null, occurred_on: date, is_recurring: Boolean(p.recurring) };
       query = action.endsWith("create")
-        ? supabase.from("transactions").insert({ id: rowId, ...values })
-        : supabase.from("transactions").update(values).eq("id", rowId).eq("user_id", userId);
+        ? db.from("transactions").insert({ id: rowId, ...values })
+        : db.from("transactions").update(values).eq("id", rowId).eq("user_id", userId);
     } else if (action === "transaction.delete") {
       const rowId = id(p.id); if (!rowId) return NextResponse.json({ error: "Invalid transaction id." }, { status: 400 });
-      query = supabase.from("transactions").delete().eq("id", rowId).eq("user_id", userId);
+      query = db.from("transactions").delete().eq("id", rowId).eq("user_id", userId);
     } else if (action === "budget.create" || action === "budget.update") {
       const rowId = id(p.id), categoryId = id(p.categoryId), limit = positiveMoney(p.limit), month = text(p.month, 7);
       if (!rowId || !categoryId || limit === null || !/^\d{4}-\d{2}$/.test(month)) return NextResponse.json({ error: "Invalid budget data." }, { status: 400 });
       const values = { user_id: userId, category_id: categoryId, amount_limit: limit, month_start: `${month}-01` };
-      query = action.endsWith("create") ? supabase.from("budgets").insert({ id: rowId, ...values }) : supabase.from("budgets").update(values).eq("id", rowId).eq("user_id", userId);
+      query = action.endsWith("create") ? db.from("budgets").insert({ id: rowId, ...values }) : db.from("budgets").update(values).eq("id", rowId).eq("user_id", userId);
     } else if (action === "budget.delete") {
       const rowId = id(p.id); if (!rowId) return NextResponse.json({ error: "Invalid budget id." }, { status: 400 });
-      query = supabase.from("budgets").delete().eq("id", rowId).eq("user_id", userId);
+      query = db.from("budgets").delete().eq("id", rowId).eq("user_id", userId);
     } else if (action === "goal.create" || action === "goal.update") {
       const rowId=id(p.id), name=text(p.name,120), current=money(p.current), target=positiveMoney(p.target), targetDate=text(p.targetDate,10);
       if(!rowId||!name||current===null||target===null||!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) return NextResponse.json({error:"Invalid goal data."},{status:400});
       const values={user_id:userId,name,current_amount:Math.min(current,target),target_amount:target,target_date:targetDate};
-      query=action.endsWith("create")?supabase.from("savings_goals").insert({id:rowId,...values}):supabase.from("savings_goals").update(values).eq("id",rowId).eq("user_id",userId);
+      query=action.endsWith("create")?db.from("savings_goals").insert({id:rowId,...values}):db.from("savings_goals").update(values).eq("id",rowId).eq("user_id",userId);
     } else if (action === "goal.delete") {
       const rowId=id(p.id); if(!rowId)return NextResponse.json({error:"Invalid goal id."},{status:400});
-      query=supabase.from("savings_goals").delete().eq("id",rowId).eq("user_id",userId);
+      query=db.from("savings_goals").delete().eq("id",rowId).eq("user_id",userId);
     } else if (action === "account.create") {
       const rowId=id(p.id), name=text(p.name,80), type=text(p.type,20), opening=money(p.openingBalance);
       if(!rowId||!name||!allowedAccountTypes.has(type)||opening===null)return NextResponse.json({error:"Invalid account data."},{status:400});
-      query=supabase.from("accounts").insert({id:rowId,user_id:userId,name,type,opening_balance:opening});
+      query=db.from("accounts").insert({id:rowId,user_id:userId,name,type,opening_balance:opening});
     } else if (action === "account.delete") {
       const rowId=id(p.id); if(!rowId)return NextResponse.json({error:"Invalid account id."},{status:400});
-      query=supabase.from("accounts").delete().eq("id",rowId).eq("user_id",userId);
+      query=db.from("accounts").delete().eq("id",rowId).eq("user_id",userId);
     } else {
       return NextResponse.json({ error: "Unsupported action." }, { status: 400 });
     }
